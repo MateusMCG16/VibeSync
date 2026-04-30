@@ -1,73 +1,56 @@
-# React + TypeScript + Vite
+# VibeSync
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+VibeSync e um webapp em React que recebe o link de uma playlist do Spotify,
+consulta a API oficial e lista as musicas encontradas com artista, album,
+capa e duracao.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19
+- TypeScript
+- Vite
+- Spotify Web API
 
-## React Compiler
+## Como configurar
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Copie o arquivo de exemplo:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```powershell
+Copy-Item .env.example .env.local
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Preencha as credenciais do Spotify:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+SPOTIFY_CLIENT_ID=seu_client_id
+SPOTIFY_CLIENT_SECRET=seu_client_secret
 ```
+
+3. Rode o projeto quando quiser testar localmente:
+
+```powershell
+npm run dev
+```
+
+## Como funciona
+
+- O React extrai o ID da playlist a partir de link, URI ou ID puro.
+- O frontend chama `/api/spotify/playlist/:playlistId`.
+- O middleware local em `vite.config.ts` usa Client Credentials Flow para obter
+  token no Spotify.
+- As faixas sao buscadas em paginas de 100 itens ate carregar a playlist
+  completa.
+
+## Seguranca
+
+O `client_secret` nunca deve ser usado diretamente no browser. Por isso, esta
+primeira versao mantem a chamada ao Spotify no middleware local do Vite.
+
+Importante: se uma credencial foi enviada em chat, issue, commit ou qualquer
+lugar publico, gere um novo `client_secret` no painel do Spotify Developer.
+
+## Proximo passo recomendado
+
+Para producao, mova a rota `/api/spotify/playlist/:playlistId` para um backend
+ou funcao serverless. O Vite middleware e bom para desenvolvimento local, mas
+nao substitui uma API de producao.
