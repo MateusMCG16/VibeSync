@@ -69,6 +69,7 @@ function App() {
 
   const playlistId = useMemo(() => extractPlaylistId(playlistInput), [playlistInput])
   const canSubmit = status !== 'loading' && playlistInput.trim().length > 0
+  const syncedTrackCount = playlist?.tracks.length ?? 0
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -105,14 +106,92 @@ function App() {
 
   return (
     <main className="app-shell">
-      <section className="hero-section">
-        <div className="hero-content">
-          <p className="eyebrow">Spotify playlist sync</p>
-          <h1>VibeSync</h1>
-          <p className="hero-copy">
-            Cole o link de uma playlist do Spotify para visualizar todas as
-            musicas, artistas, albuns e duracoes em uma lista limpa.
-          </p>
+      <nav className="topbar" aria-label="Navegacao principal">
+        <a className="brand" href="#top" aria-label="VibeSync inicio">
+          <span className="brand-mark" aria-hidden="true" />
+          <span>VibeSync</span>
+        </a>
+
+        <div className="topbar-links" aria-label="Secoes">
+          <a href="#sync">Sync</a>
+          <a href="#resultados">Resultados</a>
+        </div>
+
+        <a className="topbar-action" href="#sync">
+          Comecar
+        </a>
+      </nav>
+
+      <section className="hero-section" id="top">
+        <div className="hero-grid">
+          <div className="hero-copy-block">
+            <span className="section-pill">Spotify Web API</span>
+            <h1>Sincronize playlists do Spotify.</h1>
+            <p className="hero-copy">
+              Cole um link, URI ou ID de playlist para listar musicas,
+              artistas, albuns, capas e duracoes em uma interface objetiva.
+            </p>
+
+            <div className="hero-actions">
+              <a className="primary-link" href="#sync">
+                Sincronizar playlist
+              </a>
+              <span className="hero-status">
+                <span aria-hidden="true" />
+                API Spotify
+              </span>
+            </div>
+          </div>
+
+          <aside className="summary-card" aria-label="Resumo da sincronizacao">
+            <div className="summary-card-header">
+              <div>
+                <span className="section-pill is-outline">Status</span>
+                <h2>{playlist?.name ?? 'Nenhuma playlist carregada'}</h2>
+              </div>
+              <span className="status-dot" data-status={status} />
+            </div>
+
+            <div className="summary-grid">
+              <div className="metric-card">
+                <span>Faixas</span>
+                <strong>{syncedTrackCount || '-'}</strong>
+              </div>
+              <div className="metric-card">
+                <span>Origem</span>
+                <strong>{playlist?.ownerName ?? 'Spotify'}</strong>
+              </div>
+              <div className="metric-card is-wide">
+                <span>Estado</span>
+                <strong>
+                  {status === 'loading'
+                    ? 'Buscando'
+                    : status === 'success'
+                      ? 'Sincronizado'
+                      : status === 'error'
+                        ? 'Erro'
+                        : 'Pronto'}
+                </strong>
+              </div>
+            </div>
+
+            <div className="summary-footer">
+              <span>Entrada aceita</span>
+              <span>
+                Link completo <span aria-hidden="true">/</span> URI <span aria-hidden="true">/</span> ID
+              </span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section className="sync-section" id="sync">
+        <div className="sync-panel">
+          <div className="sync-heading">
+            <span className="section-pill">Playlist input</span>
+            <h2>Buscar playlist</h2>
+            <p>Use qualquer formato valido do Spotify.</p>
+          </div>
 
           <form className="playlist-form" onSubmit={handleSubmit}>
             <label htmlFor="playlist-url">Link da playlist</label>
@@ -140,24 +219,27 @@ function App() {
         </div>
       </section>
 
-      <section className="results-section" aria-live="polite">
+      <section className="results-section" id="resultados" aria-live="polite">
         {status === 'idle' && (
           <div className="empty-state">
-            <span>Pronto para sincronizar</span>
+            <span className="section-pill">Ready</span>
+            <h2>Pronto para sincronizar</h2>
             <p>As faixas da playlist aparecem aqui depois da busca.</p>
           </div>
         )}
 
         {status === 'loading' && (
           <div className="empty-state">
-            <span>Carregando playlist</span>
+            <span className="section-pill is-blue">Live request</span>
+            <h2>Carregando playlist</h2>
             <p>Buscando dados diretamente na API do Spotify.</p>
           </div>
         )}
 
         {status === 'error' && (
           <div className="empty-state error-state">
-            <span>Falha na sincronizacao</span>
+            <span className="section-pill is-error">Erro</span>
+            <h2>Falha na sincronizacao</h2>
             <p>{errorMessage}</p>
           </div>
         )}
@@ -172,7 +254,7 @@ function App() {
               )}
 
               <div>
-                <p className="eyebrow">Playlist de {playlist.ownerName}</p>
+                <span className="section-pill is-blue">Playlist de {playlist.ownerName}</span>
                 <h2>{playlist.name}</h2>
                 {playlist.description && (
                   <p className="playlist-description">{playlist.description}</p>
