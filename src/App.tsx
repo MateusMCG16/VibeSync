@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import './App.css'
 
 type PlaylistTrack = {
@@ -27,6 +27,7 @@ type PlaylistResult = {
 }
 
 type RequestStatus = 'idle' | 'loading' | 'success' | 'error'
+type ThemeMode = 'light' | 'dark'
 
 const playlistUrlPattern =
   /spotify\.com\/(?:(?:[a-z]{2}|intl-[a-z]{2})\/)?playlist\/([a-zA-Z0-9]+)/
@@ -61,15 +62,41 @@ function formatDuration(durationMs: number) {
   return `${minutes}:${seconds}`
 }
 
+function getInitialTheme(): ThemeMode {
+  try {
+    const storedTheme = localStorage.getItem('vibesync-theme')
+
+    if (storedTheme === 'light' || storedTheme === 'dark') {
+      return storedTheme
+    }
+
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  } catch {
+    return 'light'
+  }
+}
+
 function App() {
+  const [theme, setTheme] = useState<ThemeMode>(getInitialTheme)
   const [playlistInput, setPlaylistInput] = useState('')
   const [playlist, setPlaylist] = useState<PlaylistResult | null>(null)
   const [status, setStatus] = useState<RequestStatus>('idle')
   const [errorMessage, setErrorMessage] = useState('')
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+
+    try {
+      localStorage.setItem('vibesync-theme', theme)
+    } catch {
+      // Persistencia de tema e opcional; a interface continua funcional sem storage.
+    }
+  }, [theme])
+
   const playlistId = useMemo(() => extractPlaylistId(playlistInput), [playlistInput])
   const canSubmit = status !== 'loading' && playlistInput.trim().length > 0
   const syncedTrackCount = playlist?.tracks.length ?? 0
+  const isDarkTheme = theme === 'dark'
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -105,7 +132,7 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-theme={theme}>
       <nav className="topbar" aria-label="Navegacao principal">
         <a className="brand" href="#top" aria-label="VibeSync inicio">
           <span className="brand-mark" aria-hidden="true" />
@@ -117,9 +144,22 @@ function App() {
           <a href="#resultados">Resultados</a>
         </div>
 
-        <a className="topbar-action" href="#sync">
-          Comecar
-        </a>
+        <div className="topbar-actions">
+          <button
+            className="theme-toggle"
+            type="button"
+            aria-label={`Alternar para tema ${isDarkTheme ? 'claro' : 'escuro'}`}
+            aria-pressed={isDarkTheme}
+            onClick={() => setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'))}
+          >
+            <span className="theme-toggle-icon" aria-hidden="true" />
+            <span>{isDarkTheme ? 'Claro' : 'Escuro'}</span>
+          </button>
+
+          <a className="topbar-action" href="#sync">
+            Comecar
+          </a>
+        </div>
       </nav>
 
       <section className="hero-section" id="top">
